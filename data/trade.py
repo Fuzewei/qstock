@@ -1498,6 +1498,52 @@ def bond_info(code_list=None):
 
 ####可转债历史K线和实时交易数据可通过统一接口get_k_data和intraday_data获取
 
+kzz_info_field = {
+    'SECURITY_CODE': '可转债代码',
+    'SECURITY_NAME_ABBR': '债券名称',
+    'CONVERT_STOCK_CODE': '正股代码',
+    'SECURITY_SHORT_NAME': '正股名称',
+    'RATING': '债券评级',
+    'PUBLIC_START_DATE': '申购日期',
+    'LISTING_DATE': '上市日期',
+    'EXPIRE_DATE': '到期日期',
+    'BOND_EXPIRE': '期限(年)',
+    "TRANSFER_VALUE":"转股价值"}
+
+def kkz_info_all():
+    """
+    获取可转载基本信息列表
+    """
+    page = 1
+    dfs = []
+    columns = kzz_info_field
+    while 1:
+        params = (
+            ('sortColumns', 'PUBLIC_START_DATE'),
+            ('sortTypes', '-1'),
+            ('pageSize', '500'),
+            ('pageNumber', f'{page}'),
+            ('reportName', 'RPT_BOND_CB_LIST'),
+            ('columns', 'ALL'),
+            ('source', 'WEB'),
+            ('client', 'WEB'),
+        )
+
+        url = 'http://datacenter-web.eastmoney.com/api/data/v1/get'
+        json_response = requests.get(url,
+                                     headers=request_header,
+                                     params=params).json()
+        if json_response['result'] is None:
+            break
+        data = json_response['result']['data']
+        df = pd.DataFrame(data).rename(
+            columns=columns)[columns.values()]
+        dfs.append(df)
+        page += 1
+
+    df = pd.concat(dfs, ignore_index=True)
+    return df
+
 #########################################################################
 ####期货future
 def future_info():
@@ -1507,4 +1553,4 @@ def future_info():
     cols = ['代码', '名称', '涨幅', '最新', 'ID', '市场', '时间']
     return df[cols]
 
-####期货历史K线和实时交易数据可通过统一接口get_k_data和intraday_data获取
+####期货历史K线和实时交易数据可通过统一接口和intraday_data获取
